@@ -1,0 +1,1336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Finance Dashboard — Accounts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+@import url('https://cdn.jsdelivr.net/npm/@tailwindcss/cdn@4/dist/cdn.min.css');
+
+/* ── Design Tokens ── */
+:root {
+  --bg:         #F6F7FB;
+  --surface:    #FFFFFF;
+  --surface-2:  #F0F1F6;
+  --border:     #E8E9F0;
+  --text-1:     #0D0E14;
+  --text-2:     #5C5F72;
+  --text-3:     #9EA2B3;
+
+  /* Semantic */
+  --blue:       #3B5BF6;
+  --blue-dim:   #EEF1FF;
+  --green:      #16A34A;
+  --green-dim:  #DCFCE7;
+  --red:        #DC2626;
+  --red-dim:    #FEE2E2;
+  --amber:      #D97706;
+  --amber-dim:  #FEF3C7;
+  --purple:     #7C3AED;
+  --purple-dim: #EDE9FE;
+  --teal:       #0D9488;
+  --teal-dim:   #CCFBF1;
+
+  /* Account type colors */
+  --cc-grad:    linear-gradient(135deg, #1e3a5f, #2563EB);
+  --bank-grad:  linear-gradient(135deg, #064e3b, #059669);
+  --cash-grad:  linear-gradient(135deg, #451a03, #D97706);
+  --pay-grad:   linear-gradient(135deg, #450a0a, #DC2626);
+  --rec-grad:   linear-gradient(135deg, #14532d, #16A34A);
+}
+
+* { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+body {
+  background: var(--bg);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  color: var(--text-1);
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+}
+
+.phone {
+  width: 100%;
+  max-width: 390px;
+  min-height: 100dvh;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Status bar ── */
+.status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--bg);
+}
+.status-right { display: flex; gap: 5px; align-items: center; font-size: 11px; }
+
+/* ── Top bar ── */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 6px 20px 14px;
+}
+.topbar-left {}
+.greeting { font-size: 13px; color: var(--text-2); font-weight: 500; }
+.page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-top: 1px; }
+.topbar-icons { display: flex; gap: 8px; margin-top: 4px; }
+.icon-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.icon-btn svg { width: 16px; height: 16px; stroke: var(--text-2); }
+
+/* ── Budget card ── */
+.budget-card {
+  margin: 0 16px 20px;
+  background: var(--surface);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 16px;
+}
+.budget-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-3);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.budget-amounts {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+.budget-spent { font-size: 20px; font-weight: 800; color: var(--red); letter-spacing: -0.5px; }
+.budget-sep   { font-size: 14px; color: var(--text-3); }
+.budget-total { font-size: 14px; font-weight: 600; color: var(--teal); }
+
+.progress-track {
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #DC2626, #F97316);
+  width: 64%;
+  transition: width 0.6s ease;
+}
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+.progress-labels .used  { color: var(--red); }
+.progress-labels .left  { color: var(--teal); }
+
+.stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.stat-item { text-align: center; }
+.stat-item:not(:last-child) { border-right: 1px solid var(--border); }
+.stat-label { font-size: 10px; color: var(--text-3); font-weight: 500; margin-bottom: 3px; }
+.stat-value { font-size: 14px; font-weight: 700; color: var(--text-1); }
+.stat-value.green { color: var(--green); }
+.stat-value.blue  { color: var(--blue); }
+
+/* ── Section header ── */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px 10px;
+}
+.section-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.section-total {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-2);
+}
+.section-total.red   { color: var(--red); }
+.section-total.green { color: var(--green); }
+
+/* ── Account type label ── */
+.type-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px 6px;
+}
+.type-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.type-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+}
+.type-count {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-3);
+  background: var(--surface-2);
+  border-radius: 99px;
+  padding: 1px 7px;
+}
+.type-total {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ── Horizontal scroll ── */
+.h-scroll {
+  display: flex;
+  gap: 10px;
+  padding: 0 20px 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.h-scroll::-webkit-scrollbar { display: none; }
+
+/* ── Account Card ── */
+.acc-card {
+  flex-shrink: 0;
+  width: 152px;
+  border-radius: 14px;
+  padding: 14px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.15s;
+  color: white;
+}
+.acc-card:hover  { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+.acc-card:active { transform: scale(0.97); }
+
+.acc-card.cc     { background: var(--cc-grad); }
+.acc-card.bank   { background: var(--bank-grad); }
+.acc-card.cash   { background: var(--cash-grad); }
+.acc-card.payable     { background: var(--pay-grad); }
+.acc-card.receivable  { background: var(--rec-grad); }
+
+/* Noise texture overlay */
+.acc-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.06'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: 14px;
+}
+
+.acc-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.18);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+.acc-bank-name {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.75;
+  margin-bottom: 1px;
+}
+.acc-card-name {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.acc-masked {
+  font-size: 10px;
+  opacity: 0.6;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+/* Due / warning badge */
+.acc-due-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 7px;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+.acc-due-badge.overdue { background: rgba(239,68,68,0.25); color: #FCA5A5; }
+.acc-due-badge.soon    { background: rgba(251,191,36,0.22); color: #FDE68A; }
+.acc-due-badge.ok      { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7); }
+
+.acc-amount {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  margin-top: 2px;
+}
+.acc-amount-label {
+  font-size: 9px;
+  font-weight: 600;
+  opacity: 0.55;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Mini progress on card */
+.card-progress-track {
+  height: 3px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 99px;
+  margin-top: 8px;
+  overflow: hidden;
+}
+.card-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.6);
+}
+
+/* Add card button */
+.acc-card-add {
+  flex-shrink: 0;
+  width: 80px;
+  border-radius: 14px;
+  padding: 14px 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1.5px dashed var(--border);
+  color: var(--text-3);
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  transition: border-color 0.15s, color 0.15s;
+}
+.acc-card-add:hover { border-color: var(--blue); color: var(--blue); }
+.acc-card-add svg { width: 20px; height: 20px; stroke: currentColor; }
+
+/* Section divider */
+.section-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 12px 20px;
+}
+
+/* Main scroll area */
+.main-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 80px;
+  scrollbar-width: none;
+}
+.main-scroll::-webkit-scrollbar { display: none; }
+
+/* ── Bottom sheet ── */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  backdrop-filter: blur(2px);
+}
+.sheet-backdrop.open { opacity: 1; pointer-events: all; }
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 100%;
+  max-width: 390px;
+  background: var(--surface);
+  border-radius: 20px 20px 0 0;
+  z-index: 50;
+  transition: transform 0.32s cubic-bezier(0.32,0.72,0,1);
+  max-height: 85dvh;
+  display: flex;
+  flex-direction: column;
+}
+.bottom-sheet.open { transform: translateX(-50%) translateY(0); }
+
+.sheet-handle-area {
+  padding: 10px 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.sheet-handle {
+  width: 36px; height: 4px;
+  border-radius: 99px;
+  background: var(--border);
+  margin-bottom: 12px;
+}
+.sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.sheet-title { font-size: 17px; font-weight: 700; }
+.sheet-close {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: none;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: var(--text-2);
+}
+.sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px 28px;
+  scrollbar-width: none;
+}
+.sheet-body::-webkit-scrollbar { display: none; }
+
+/* Sheet content styles */
+.sheet-card-visual {
+  border-radius: 14px;
+  padding: 18px;
+  color: white;
+  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+}
+.sheet-card-visual::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.06'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.scard-bank { font-size: 12px; font-weight: 600; opacity: 0.7; margin-bottom: 2px; }
+.scard-name { font-size: 18px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.3px; }
+.scard-number { font-size: 13px; letter-spacing: 0.18em; opacity: 0.65; font-weight: 500; }
+
+.sheet-stat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.sheet-stat-box {
+  background: var(--surface-2);
+  border-radius: 12px;
+  padding: 12px;
+}
+.sheet-stat-box-label {
+  font-size: 11px;
+  color: var(--text-3);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.sheet-stat-box-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-1);
+  letter-spacing: -0.3px;
+}
+.sheet-stat-box-value.green { color: var(--green); }
+.sheet-stat-box-value.red   { color: var(--red); }
+.sheet-stat-box-value.blue  { color: var(--blue); }
+.sheet-stat-box-value.amber { color: var(--amber); }
+
+.sheet-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  margin: 16px 0 8px;
+}
+
+.sheet-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.sheet-alert.danger { background: var(--red-dim); color: var(--red); }
+.sheet-alert.warn   { background: var(--amber-dim); color: var(--amber); }
+.sheet-alert.good   { background: var(--green-dim); color: var(--green); }
+.sheet-alert svg { width: 14px; height: 14px; stroke: currentColor; flex-shrink: 0; }
+
+.sheet-progress-track {
+  height: 8px;
+  background: var(--surface-2);
+  border-radius: 99px;
+  overflow: hidden;
+  margin: 8px 0 4px;
+}
+.sheet-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+}
+
+.sheet-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.sheet-detail-row:last-child { border-bottom: none; }
+.sheet-detail-label { color: var(--text-2); font-weight: 500; }
+.sheet-detail-value { font-weight: 700; color: var(--text-1); }
+.sheet-detail-value.red   { color: var(--red); }
+.sheet-detail-value.green { color: var(--green); }
+.sheet-detail-value.amber { color: var(--amber); }
+
+.sheet-person-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.sheet-person-row:last-child { border-bottom: none; }
+.sheet-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+.sheet-person-info { flex: 1; }
+.sheet-person-name { font-size: 14px; font-weight: 600; color: var(--text-1); }
+.sheet-person-meta { font-size: 11px; color: var(--text-3); font-weight: 500; margin-top: 1px; }
+.sheet-person-amount { font-size: 15px; font-weight: 800; letter-spacing: -0.3px; }
+.sheet-person-amount.red   { color: var(--red); }
+.sheet-person-amount.green { color: var(--green); }
+.sheet-person-badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 3px;
+  display: inline-block;
+}
+.sheet-person-badge.overdue { background: var(--red-dim); color: var(--red); }
+.sheet-person-badge.soon    { background: var(--amber-dim); color: var(--amber); }
+.sheet-person-badge.ok      { background: var(--green-dim); color: var(--green); }
+
+.sheet-btn-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+.sheet-btn {
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s, transform 0.1s;
+  font-family: inherit;
+}
+.sheet-btn:active { transform: scale(0.97); opacity: 0.85; }
+.sheet-btn.primary { background: var(--blue); color: white; }
+.sheet-btn.secondary { background: var(--surface-2); color: var(--text-1); }
+.sheet-btn.full { grid-column: 1 / -1; background: var(--blue); color: white; }
+.sheet-btn.add-btn { background: var(--surface-2); color: var(--blue); grid-column: 1/-1; }
+
+/* Net income/expense in bank sheet */
+.month-flow {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+.flow-item {
+  flex: 1;
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.flow-label { font-size: 10px; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+.flow-val { font-size: 15px; font-weight: 800; }
+.flow-val.green { color: var(--green); }
+.flow-val.red   { color: var(--red); }
+
+/* ── Bottom nav ── */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%; max-width: 390px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 0 20px;
+  z-index: 30;
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  cursor: pointer; padding: 4px 14px; border-radius: 10px;
+  color: var(--text-3); font-size: 10px; font-weight: 600;
+  transition: color 0.15s;
+}
+.nav-item.active { color: var(--blue); }
+.nav-item svg { width: 20px; height: 20px; stroke: currentColor; }
+
+/* Entry animation */
+@keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+.acc-card { animation: slideUp 0.2s ease both; }
+.acc-card:nth-child(1) { animation-delay: 0.04s; }
+.acc-card:nth-child(2) { animation-delay: 0.08s; }
+.acc-card:nth-child(3) { animation-delay: 0.12s; }
+.acc-card:nth-child(4) { animation-delay: 0.16s; }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="phone">
+
+  <!-- Status bar --
+  <div class="status-bar">
+    <span>4:04</span>
+    <div class="status-right">
+      <span>1.15 KB/s</span>
+      <span>▂▄▆█</span>
+      <span>WiFi</span>
+      <span style="background:#0D0E14;color:white;padding:1px 6px;border-radius:4px;font-size:10px;">48</span>
+    </div>
+  </div>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="greeting">Good morning, Satish 👋</div>
+      <div class="page-title">Dashboard</div>
+    </div>
+    <div class="topbar-icons">
+      <div class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+      </div>
+      <div class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main scroll -->
+  <div class="main-scroll">
+
+    <!-- Budget card -->
+    <div class="budget-card">
+      <div class="budget-eyebrow">Monthly Budget • June 2026</div>
+      <div class="budget-amounts">
+        <span class="budget-spent">₹32,000</span>
+        <span class="budget-sep">/</span>
+        <span class="budget-total">₹50,000</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill"></div></div>
+      <div class="progress-labels">
+        <span class="used">64% used</span>
+        <span class="left">36% remaining</span>
+      </div>
+      <div class="stat-row">
+        <div class="stat-item">
+          <div class="stat-label">Remaining</div>
+          <div class="stat-value green">₹18,000</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Days left</div>
+          <div class="stat-value">12</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-label">Safe/day</div>
+          <div class="stat-value blue">₹1,500</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- YOUR ACCOUNTS section header -->
+    <div class="section-header">
+      <span class="section-title">Your Accounts</span>
+      <span class="section-total">Net ₹1,64,500</span>
+    </div>
+
+    <!-- ── CREDIT CARDS ── -->
+    <div class="type-label-row">
+      <div class="type-label">
+        <div class="type-dot" style="background:#2563EB"></div>
+        Credit Cards
+        <span class="type-count">3</span>
+      </div>
+      <div class="type-total" style="color:var(--red)">Due ₹28,200</div>
+    </div>
+    <div class="h-scroll" id="cc-row">
+      <!-- HDFC Visa - Overdue -->
+      <div class="acc-card cc" onclick="openSheet('cc-hdfc')">
+        <div class="acc-icon">💳</div>
+        <div class="acc-bank-name">HDFC Bank</div>
+        <div class="acc-card-name">Visa Platinum</div>
+        <div class="acc-masked">•••• •••• •••• 4521</div>
+        <div class="acc-due-badge overdue">⚠ OVERDUE</div>
+        <div class="acc-amount">₹15,000</div>
+        <div class="acc-amount-label">Total Due</div>
+        <div class="card-progress-track"><div class="card-progress-fill" style="width:30%"></div></div>
+      </div>
+      <!-- ICICI Gold - Due soon -->
+      <div class="acc-card cc" style="background:linear-gradient(135deg,#312e81,#6366F1)" onclick="openSheet('cc-icici')">
+        <div class="acc-icon">💎</div>
+        <div class="acc-bank-name">ICICI Bank</div>
+        <div class="acc-card-name">Gold Credit</div>
+        <div class="acc-masked">•••• •••• •••• 7832</div>
+        <div class="acc-due-badge soon">Due Jan 7</div>
+        <div class="acc-amount">₹5,000</div>
+        <div class="acc-amount-label">Total Due</div>
+        <div class="card-progress-track"><div class="card-progress-fill" style="width:20%"></div></div>
+      </div>
+      <!-- SBI Simply Save -->
+      <div class="acc-card cc" style="background:linear-gradient(135deg,#1e3a5f,#0284c7)" onclick="openSheet('cc-sbi')">
+        <div class="acc-icon">🏦</div>
+        <div class="acc-bank-name">SBI Card</div>
+        <div class="acc-card-name">SimplySave</div>
+        <div class="acc-masked">•••• •••• •••• 1122</div>
+        <div class="acc-due-badge ok">Due Jan 15</div>
+        <div class="acc-amount">₹8,200</div>
+        <div class="acc-amount-label">Total Due</div>
+        <div class="card-progress-track"><div class="card-progress-fill" style="width:16%"></div></div>
+      </div>
+      <div class="acc-card-add" onclick="openSheet('add-cc')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Add Card
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- ── BANK ACCOUNTS ── -->
+    <div class="type-label-row">
+      <div class="type-label">
+        <div class="type-dot" style="background:#059669"></div>
+        Bank Accounts
+        <span class="type-count">2</span>
+      </div>
+      <div class="type-total" style="color:var(--green)">₹1,45,000</div>
+    </div>
+    <div class="h-scroll">
+      <div class="acc-card bank" onclick="openSheet('bank-sbi')">
+        <div class="acc-icon">🏛</div>
+        <div class="acc-bank-name">State Bank of India</div>
+        <div class="acc-card-name">Savings A/C</div>
+        <div class="acc-masked">A/C •••••••• 4521</div>
+        <div style="height:10px"></div>
+        <div class="acc-amount">₹1,00,000</div>
+        <div class="acc-amount-label">Current Balance</div>
+      </div>
+      <div class="acc-card bank" style="background:linear-gradient(135deg,#14532d,#15803d)" onclick="openSheet('bank-pnb')">
+        <div class="acc-icon">🏦</div>
+        <div class="acc-bank-name">Punjab National Bank</div>
+        <div class="acc-card-name">Current A/C</div>
+        <div class="acc-masked">A/C •••••••• 9900</div>
+        <div style="height:10px"></div>
+        <div class="acc-amount">₹45,000</div>
+        <div class="acc-amount-label">Current Balance</div>
+      </div>
+      <div class="acc-card-add" onclick="openSheet('add-bank')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Add Bank
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- ── CASH ── -->
+    <div class="type-label-row">
+      <div class="type-label">
+        <div class="type-dot" style="background:#D97706"></div>
+        Cash
+        <span class="type-count">1</span>
+      </div>
+      <div class="type-total" style="color:var(--amber)">₹2,500</div>
+    </div>
+    <div class="h-scroll">
+      <div class="acc-card cash" onclick="openSheet('cash')">
+        <div class="acc-icon">💵</div>
+        <div class="acc-bank-name">Physical Cash</div>
+        <div class="acc-card-name">Cash in Hand</div>
+        <div class="acc-masked">Updated today</div>
+        <div style="height:10px"></div>
+        <div class="acc-amount">₹2,500</div>
+        <div class="acc-amount-label">Available Cash</div>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- ── PAYABLE ── -->
+    <div class="type-label-row">
+      <div class="type-label">
+        <div class="type-dot" style="background:#DC2626"></div>
+        Payable
+        <span class="type-count">3</span>
+      </div>
+      <div class="type-total" style="color:var(--red)">You Owe ₹23,000</div>
+    </div>
+    <div class="h-scroll">
+      <div class="acc-card payable" onclick="openSheet('payable')">
+        <div class="acc-icon">👤</div>
+        <div class="acc-bank-name">Ramesh Kumar</div>
+        <div class="acc-card-name">Personal Loan</div>
+        <div class="acc-masked">Since Dec 2025</div>
+        <div class="acc-due-badge soon">Due Mar 1</div>
+        <div class="acc-amount">₹15,000</div>
+        <div class="acc-amount-label">You Owe</div>
+      </div>
+      <div class="acc-card payable" style="background:linear-gradient(135deg,#3b0764,#7e22ce)" onclick="openSheet('payable')">
+        <div class="acc-icon">🏪</div>
+        <div class="acc-bank-name">Suresh General Store</div>
+        <div class="acc-card-name">Shop Credit</div>
+        <div class="acc-masked">Since Jan 2026</div>
+        <div class="acc-due-badge overdue">⚠ Overdue</div>
+        <div class="acc-amount">₹8,000</div>
+        <div class="acc-amount-label">You Owe</div>
+      </div>
+      <div class="acc-card-add" onclick="openSheet('add-payable')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Add
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <!-- ── RECEIVABLE ── -->
+    <div class="type-label-row">
+      <div class="type-label">
+        <div class="type-dot" style="background:#16A34A"></div>
+        Receivable
+        <span class="type-count">2</span>
+      </div>
+      <div class="type-total" style="color:var(--green)">Owed to You ₹12,500</div>
+    </div>
+    <div class="h-scroll">
+      <div class="acc-card receivable" onclick="openSheet('receivable')">
+        <div class="acc-icon">👤</div>
+        <div class="acc-bank-name">Amit Singh</div>
+        <div class="acc-card-name">Lent Amount</div>
+        <div class="acc-masked">Since Jan 10</div>
+        <div class="acc-due-badge ok">Collecting Mar</div>
+        <div class="acc-amount">₹7,500</div>
+        <div class="acc-amount-label">Owed to You</div>
+      </div>
+      <div class="acc-card receivable" style="background:linear-gradient(135deg,#052e16,#15803d)" onclick="openSheet('receivable')">
+        <div class="acc-icon">👤</div>
+        <div class="acc-bank-name">Rahul Verma</div>
+        <div class="acc-card-name">Lent Amount</div>
+        <div class="acc-masked">Since Feb 2</div>
+        <div class="acc-due-badge soon">Due Feb 28</div>
+        <div class="acc-amount">₹5,000</div>
+        <div class="acc-amount-label">Owed to You</div>
+      </div>
+      <div class="acc-card-add" onclick="openSheet('add-receivable')">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Add
+      </div>
+    </div>
+
+    <div style="height:16px"></div>
+
+  </div><!-- /main-scroll -->
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav">
+    <div class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Accounts</span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <span>Add</span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      <span>Transactions</span>
+    </div>
+    <div class="nav-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      <span>Settings</span>
+    </div>
+  </nav>
+
+</div><!-- /phone -->
+
+<!-- ── BACKDROP ── -->
+<div class="sheet-backdrop" id="backdrop" onclick="closeSheet()"></div>
+
+<!-- ══ BOTTOM SHEETS ══ -->
+
+<!-- CC: HDFC -->
+<div class="bottom-sheet" id="sheet-cc-hdfc">
+  <div class="sheet-handle-area">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title">HDFC Visa Platinum</span>
+      <button class="sheet-close" onclick="closeSheet()">✕</button>
+    </div>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-card-visual" style="background:linear-gradient(135deg,#1e3a5f,#2563EB)">
+      <div class="scard-bank">HDFC Bank</div>
+      <div class="scard-name">Visa Platinum</div>
+      <div class="scard-number">•••• •••• •••• 4521</div>
+    </div>
+    <div class="sheet-alert danger">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Payment overdue since Jan 5 — Interest accruing daily
+    </div>
+    <div class="sheet-stat-row">
+      <div class="sheet-stat-box">
+        <div class="sheet-stat-box-label">Credit Limit</div>
+        <div class="sheet-stat-box-value">₹50,000</div>
+      </div>
+      <div class="sheet-stat-box">
+        <div class="sheet-stat-box-label">Available</div>
+        <div class="sheet-stat-box-value green">₹35,000</div>
+      </div>
+    </div>
+    <div class="sheet-section-label">Credit Usage</div>
+    <div class="sheet-progress-track">
+      <div class="sheet-progress-fill" style="width:30%;background:linear-gradient(90deg,#16A34A,#4ade80)"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);font-weight:600;margin-bottom:14px">
+      <span>₹15,000 used</span><span>30% of limit</span>
+    </div>
+    <div class="sheet-detail-row">
+      <span class="sheet-detail-label">Due Date</span>
+      <span class="sheet-detail-value red">Jan 5 (Overdue)</span>
+    </div>
+    <div class="sheet-detail-row">
+      <span class="sheet-detail-label">Minimum Due</span>
+      <span class="sheet-detail-value amber">₹1,500</span>
+    </div>
+    <div class="sheet-detail-row">
+      <span class="sheet-detail-label">Total Due</span>
+      <span class="sheet-detail-value red">₹15,000</span>
+    </div>
+    <div class="sheet-detail-row">
+      <span class="sheet-detail-label">Last Statement</span>
+      <span class="sheet-detail-value">Dec 5, 2025</span>
+    </div>
+    <div class="sheet-btn-row">
+      <button class="sheet-btn primary">Pay Now</button>
+      <button class="sheet-btn secondary">Statements</button>
+    </div>
+  </div>
+</div>
+
+<!-- CC: ICICI -->
+<div class="bottom-sheet" id="sheet-cc-icici">
+  <div class="sheet-handle-area">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title">ICICI Gold Credit</span>
+      <button class="sheet-close" onclick="closeSheet()">✕</button>
+    </div>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-card-visual" style="background:linear-gradient(135deg,#312e81,#6366F1)">
+      <div class="scard-bank">ICICI Bank</div>
+      <div class="scard-name">Gold Credit Card</div>
+      <div class="scard-number">•••• •••• •••• 7832</div>
+    </div>
+    <div class="sheet-alert warn">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      Due in 3 days — Jan 7, 2026
+    </div>
+    <div class="sheet-stat-row">
+      <div class="sheet-stat-box">
+        <div class="sheet-stat-box-label">Credit Limit</div>
+        <div class="sheet-stat-box-value">₹25,000</div>
+      </div>
+      <div class="sheet-stat-box">
+        <div class="sheet-stat-box-label">Available</div>
+        <div class="sheet-stat-box-value green">₹20,000</div>
+      </div>
+    </div>
+    <div class="sheet-detail-row">
+      <span class="sheet-detail-label">Due Date</span>
+      <span class="sheet-detail-value amber">Jan 7, 2026</span>
+    </div>
+    <div class="sheet-detail-row">
+      <span class="sheet-detail-label">Minimum Due</span>
+      <span class="sheet-detail-value">₹500</span>
+    </div>
+    <div class="sheet-detail-row">
+      <span class="sheet-detail-label">Total Due</span>
+      <span class="sheet-detail-value">₹5,000</span>
+    </div>
+    <div class="sheet-btn-row">
+      <button class="sheet-btn primary">Pay Now</button>
+      <button class="sheet-btn secondary">Statements</button>
+    </div>
+  </div>
+</div>
+
+<!-- CC: SBI -->
+<div class="bottom-sheet" id="sheet-cc-sbi">
+  <div class="sheet-handle-area">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title">SBI SimplySave</span>
+      <button class="sheet-close" onclick="closeSheet()">✕</button>
+    </div>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-card-visual" style="background:linear-gradient(135deg,#1e3a5f,#0284c7)">
+      <div class="scard-bank">SBI Card</div>
+      <div class="scard-name">SimplySave</div>
+      <div class="scard-number">•••• •••• •••• 1122</div>
+    </div>
+    <div class="sheet-alert good">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      Payment due Jan 15 — 9 days remaining
+    </div>
+    <div class="sheet-stat-row">
+      <div class="sheet-stat-box">
+        <div class="sheet-stat-box-label">Credit Limit</div>
+        <div class="sheet-stat-box-value">₹50,000</div>
+      </div>
+      <div class="sheet-stat-box">
+        <div class="sheet-stat-box-label">Available</div>
+        <div class="sheet-stat-box-value green">₹41,800</div>
+      </div>
+    </div>
+    <div class="sheet-detail-row">
+      <span class="sheet-detail-label">Due Date</span>
+      <span class="sheet-detail-value green">Jan 15, 2026</span>
+    </div>
+    <div class="sheet-detail-row">
+      <span class="sheet-detail-label">Total Due</span>
+      <span class="sheet-detail-value">₹8,200</span>
+    </div>
+    <div class="sheet-btn-row">
+      <button class="sheet-btn primary">Pay Now</button>
+      <button class="sheet-btn secondary">Statements</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bank: SBI -->
+<div class="bottom-sheet" id="sheet-bank-sbi">
+  <div class="sheet-handle-area">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title">SBI Savings Account</span>
+      <button class="sheet-close" onclick="closeSheet()">✕</button>
+    </div>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-card-visual" style="background:var(--bank-grad)">
+      <div class="scard-bank">State Bank of India</div>
+      <div class="scard-name">Savings Account</div>
+      <div class="scard-number">A/C •••••••• 4521 &nbsp;|&nbsp; SBIN0001234</div>
+    </div>
+    <div class="sheet-stat-row">
+      <div class="sheet-stat-box" style="grid-column:1/-1">
+        <div class="sheet-stat-box-label">Current Balance</div>
+        <div class="sheet-stat-box-value green" style="font-size:22px">₹1,00,000</div>
+      </div>
+    </div>
+    <div class="sheet-section-label">June 2026 Flow</div>
+    <div class="month-flow">
+      <div class="flow-item">
+        <div class="flow-label">↙ Income</div>
+        <div class="flow-val green">+₹28,500</div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-label">↗ Expenses</div>
+        <div class="flow-val red">-₹18,200</div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-label">Net</div>
+        <div class="flow-val green">+₹10,300</div>
+      </div>
+    </div>
+    <div class="sheet-detail-row" style="margin-top:8px">
+      <span class="sheet-detail-label">Account Type</span>
+      <span class="sheet-detail-value">Savings</span>
+    </div>
+    <div class="sheet-detail-row">
+      <span class="sheet-detail-label">IFSC Code</span>
+      <span class="sheet-detail-value">SBIN0001234</span>
+    </div>
+    <div class="sheet-btn-row">
+      <button class="sheet-btn primary">Transfer</button>
+      <button class="sheet-btn secondary">View Txns</button>
+    </div>
+  </div>
+</div>
+
+<!-- Bank: PNB -->
+<div class="bottom-sheet" id="sheet-bank-pnb">
+  <div class="sheet-handle-area">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title">PNB Current Account</span>
+      <button class="sheet-close" onclick="closeSheet()">✕</button>
+    </div>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-card-visual" style="background:linear-gradient(135deg,#14532d,#15803d)">
+      <div class="scard-bank">Punjab National Bank</div>
+      <div class="scard-name">Current Account</div>
+      <div class="scard-number">A/C •••••••• 9900 &nbsp;|&nbsp; PUNB0001234</div>
+    </div>
+    <div class="sheet-stat-row">
+      <div class="sheet-stat-box" style="grid-column:1/-1">
+        <div class="sheet-stat-box-label">Current Balance</div>
+        <div class="sheet-stat-box-value green" style="font-size:22px">₹45,000</div>
+      </div>
+    </div>
+    <div class="sheet-section-label">June 2026 Flow</div>
+    <div class="month-flow">
+      <div class="flow-item">
+        <div class="flow-label">↙ Income</div>
+        <div class="flow-val green">+₹12,000</div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-label">↗ Expenses</div>
+        <div class="flow-val red">-₹8,500</div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-label">Net</div>
+        <div class="flow-val green">+₹3,500</div>
+      </div>
+    </div>
+    <div class="sheet-btn-row">
+      <button class="sheet-btn primary">Transfer</button>
+      <button class="sheet-btn secondary">View Txns</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cash -->
+<div class="bottom-sheet" id="sheet-cash">
+  <div class="sheet-handle-area">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title">Cash Account</span>
+      <button class="sheet-close" onclick="closeSheet()">✕</button>
+    </div>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-card-visual" style="background:var(--cash-grad)">
+      <div class="scard-bank">Physical Cash</div>
+      <div class="scard-name">Cash in Hand</div>
+      <div class="scard-number">Last updated: Today, 9:30 AM</div>
+    </div>
+    <div class="sheet-stat-row">
+      <div class="sheet-stat-box" style="grid-column:1/-1">
+        <div class="sheet-stat-box-label">Cash in Hand</div>
+        <div class="sheet-stat-box-value amber" style="font-size:22px">₹2,500</div>
+      </div>
+    </div>
+    <div class="sheet-section-label">June 2026 Flow</div>
+    <div class="month-flow">
+      <div class="flow-item">
+        <div class="flow-label">Cash In</div>
+        <div class="flow-val green">+₹5,000</div>
+      </div>
+      <div class="flow-item">
+        <div class="flow-label">Cash Out</div>
+        <div class="flow-val red">-₹2,500</div>
+      </div>
+    </div>
+    <div class="sheet-btn-row">
+      <button class="sheet-btn full" onclick="closeSheet()">Update Balance</button>
+    </div>
+  </div>
+</div>
+
+<!-- Payable -->
+<div class="bottom-sheet" id="sheet-payable">
+  <div class="sheet-handle-area">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title">Payable</span>
+      <button class="sheet-close" onclick="closeSheet()">✕</button>
+    </div>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-stat-row" style="margin-bottom:16px">
+      <div class="sheet-stat-box" style="grid-column:1/-1">
+        <div class="sheet-stat-box-label">Total You Owe</div>
+        <div class="sheet-stat-box-value red" style="font-size:22px">₹23,000</div>
+      </div>
+    </div>
+    <div class="sheet-section-label">People & Parties</div>
+    <div class="sheet-person-row">
+      <div class="sheet-avatar" style="background:#7C3AED">R</div>
+      <div class="sheet-person-info">
+        <div class="sheet-person-name">Ramesh Kumar</div>
+        <div class="sheet-person-meta">Personal Loan • Since Dec 2025</div>
+        <span class="sheet-person-badge soon">Due Mar 1</span>
+      </div>
+      <div>
+        <div class="sheet-person-amount red">₹15,000</div>
+      </div>
+    </div>
+    <div class="sheet-person-row">
+      <div class="sheet-avatar" style="background:#EA580C">S</div>
+      <div class="sheet-person-info">
+        <div class="sheet-person-name">Suresh General Store</div>
+        <div class="sheet-person-meta">Shop Credit • Since Jan 2026</div>
+        <span class="sheet-person-badge overdue">Overdue ⚠</span>
+      </div>
+      <div>
+        <div class="sheet-person-amount red">₹8,000</div>
+      </div>
+    </div>
+    <div class="sheet-btn-row">
+      <button class="sheet-btn add-btn">+ Add Payable</button>
+    </div>
+  </div>
+</div>
+
+<!-- Receivable -->
+<div class="bottom-sheet" id="sheet-receivable">
+  <div class="sheet-handle-area">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <span class="sheet-title">Receivable</span>
+      <button class="sheet-close" onclick="closeSheet()">✕</button>
+    </div>
+  </div>
+  <div class="sheet-body">
+    <div class="sheet-stat-row" style="margin-bottom:16px">
+      <div class="sheet-stat-box" style="grid-column:1/-1">
+        <div class="sheet-stat-box-label">Total Owed to You</div>
+        <div class="sheet-stat-box-value green" style="font-size:22px">₹12,500</div>
+      </div>
+    </div>
+    <div class="sheet-section-label">People</div>
+    <div class="sheet-person-row">
+      <div class="sheet-avatar" style="background:#0284c7">A</div>
+      <div class="sheet-person-info">
+        <div class="sheet-person-name">Amit Singh</div>
+        <div class="sheet-person-meta">Lent Jan 10, 2026</div>
+        <span class="sheet-person-badge ok">Collecting Mar</span>
+      </div>
+      <div>
+        <div class="sheet-person-amount green">₹7,500</div>
+      </div>
+    </div>
+    <div class="sheet-person-row">
+      <div class="sheet-avatar" style="background:#059669">R</div>
+      <div class="sheet-person-info">
+        <div class="sheet-person-name">Rahul Verma</div>
+        <div class="sheet-person-meta">Lent Feb 2, 2026</div>
+        <span class="sheet-person-badge soon">Due Feb 28</span>
+      </div>
+      <div>
+        <div class="sheet-person-amount green">₹5,000</div>
+      </div>
+    </div>
+    <div class="sheet-btn-row">
+      <button class="sheet-btn add-btn">+ Add Receivable</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentSheet = null;
+
+function openSheet(id) {
+  closeSheet();
+  const sheet = document.getElementById('sheet-' + id);
+  if (!sheet) return;
+  currentSheet = sheet;
+  document.getElementById('backdrop').classList.add('open');
+  // Force reflow then open
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => { sheet.classList.add('open'); });
+  });
+}
+
+function closeSheet() {
+  if (currentSheet) {
+    currentSheet.classList.remove('open');
+    currentSheet = null;
+  }
+  document.getElementById('backdrop').classList.remove('open');
+}
+
+// Keyboard close
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+</script>
+</body>
+</html>
